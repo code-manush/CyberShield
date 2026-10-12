@@ -1,0 +1,92 @@
+{
+  "is_trained": true,
+  "model_type": "RandomForestClassifier",
+  "model_version": "1.0.0",
+  "dataset_source": "CIC-IDS Standardized Network Flow Telemetry",
+  "training_set_size": 4800,
+  "test_set_size": 1200,
+  "features": [
+    "flow_duration",
+    "total_fwd_packets",
+    "total_bwd_packets",
+    "total_fwd_bytes",
+    "total_bwd_bytes",
+    "flow_bytes_per_sec",
+    "flow_packets_per_sec",
+    "syn_flag_count",
+    "ack_flag_count",
+    "syn_ratio",
+    "ack_ratio",
+    "destination_port",
+    "is_well_known_port"
+  ],
+  "classes": [
+    "BENIGN",
+    "PORT_SCAN",
+    "SYN_FLOOD"
+  ],
+  "accuracy": 1.0,
+  "precision": 1.0,
+  "recall": 1.0,
+  "f1_score": 1.0,
+  "false_positive_rate": 0.0,
+  "confusion_matrix": [
+    [
+      600,
+      0,
+      0
+    ],
+    [
+      0,
+      300,
+      0
+    ],
+    [
+      0,
+      0,
+      300
+    ]
+  ],
+  "per_class_metrics": {
+    "BENIGN": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 600.0
+    },
+    "PORT_SCAN": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 300.0
+    },
+    "SYN_FLOOD": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 300.0
+    }
+  },
+  "baseline_comparison": {
+    "baseline_type": "Deterministic Rule Heuristic",
+    "baseline_accuracy": 1.0,
+    "baseline_f1_score": 1.0,
+    "ml_f1_improvement": 0.0
+  },
+  "feature_importances": {
+    "total_bwd_bytes": 0.1423,
+    "total_bwd_packets": 0.1184,
+    "ack_ratio": 0.1183,
+    "syn_flag_count": 0.1109,
+    "total_fwd_bytes": 0.0957,
+    "total_fwd_packets": 0.0886,
+    "syn_ratio": 0.0877,
+    "ack_flag_count": 0.0821,
+    "destination_port": 0.0682,
+    "flow_duration": 0.0451,
+    "flow_bytes_per_sec": 0.0193,
+    "is_well_known_port": 0.0134,
+    "flow_packets_per_sec": 0.01
+  },
+  "trained_at": "2026-10-12T12:24:14.604801"
+}

@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+env/
+venv/
+ENV/
+*.joblib
+*.db
+*.sqlite3
+
+# Node / Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Capture files & logs
+*.log
+*.pcapng
+temp_repos/
+
+# Secrets & Environment
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
