@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
+import { DemoGuideModal } from './components/DemoGuideModal';
 import { OverviewPage } from './pages/OverviewPage';
+import { AttackLabPage } from './pages/AttackLabPage';
 import { LiveMonitoringPage } from './pages/LiveMonitoringPage';
 import { ThreatDetectionPage } from './pages/ThreatDetectionPage';
 import { PreventionPage } from './pages/PreventionPage';
@@ -15,11 +17,14 @@ import {
   fetchPreventionStatus,
   fetchBlockedIPs,
   fetchMLMetrics,
+  fetchSimulationStatus,
   startMonitoring,
   stopMonitoring,
   setPreventionMode,
   blockIP,
-  unblockIP
+  unblockIP,
+  startAttackSimulation,
+  stopAttackSimulation
 } from './services/api';
 import { useCyberShieldWebSocket, WebSocketMessage } from './services/websocket';
 import {
@@ -30,12 +35,14 @@ import {
   PreventionStatus,
   BlockedAddress,
   MLMetrics,
+  AttackSimulationStatus,
   PreventionMode
 } from './types';
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('overview');
   const [selectedEvent, setSelectedEvent] = useState<SecurityEvent | null>(null);
+  const [isGuideOpen, setIsGuideOpen] = useState<boolean>(false);
 
   const [events, setEvents] = useState<SecurityEvent[]>([]);
   const [stats, setStats] = useState<EventStatistics | null>(null);
@@ -44,17 +51,19 @@ export const App: React.FC = () => {
   const [preventionStatus, setPreventionStatus] = useState<PreventionStatus | null>(null);
   const [blockedIPs, setBlockedIPs] = useState<BlockedAddress[]>([]);
   const [mlMetrics, setMlMetrics] = useState<MLMetrics | null>(null);
+  const [simStatus, setSimStatus] = useState<AttackSimulationStatus | null>(null);
 
   const loadData = useCallback(async () => {
     try {
-      const [evs, st, mon, net, prev, blk, ml] = await Promise.all([
+      const [evs, st, mon, net, prev, blk, ml, sim] = await Promise.all([
         fetchEvents({ limit: 50 }),
         fetchEventStatistics(),
         fetchMonitoringStatus(),
         fetchNetworkStatistics(),
         fetchPreventionStatus(),
         fetchBlockedIPs(),
-        fetchMLMetrics()
+        fetchMLMetrics(),
+        fetchSimulationStatus()
       ]);
       setEvents(evs);
       setStats(st);
@@ -63,6 +72,7 @@ export const App: React.FC = () => {
       setPreventionStatus(prev);
       setBlockedIPs(blk);
       setMlMetrics(ml);
+      setSimStatus(sim);
     } catch (e) {
       console.debug('Failed to load initial CyberShield telemetry', e);
     }
@@ -70,7 +80,7 @@ export const App: React.FC = () => {
 
   useEffect(() => {
     loadData();
-    const interval = setInterval(loadData, 5000);
+    const interval = setInterval(loadData, 4000);
     return () => clearInterval(interval);
   }, [loadData]);
 
@@ -86,8 +96,15 @@ export const App: React.FC = () => {
       setNetStats(msg.data);
     } else if (msg.type === 'MONITORING_STATUS_CHANGED') {
       setMonitoringStatus(msg.data);
+    } else if (msg.type === 'ATTACK_SIMULATION_UPDATE') {
+      setSimStatus(msg.data);
+    } else if (msg.type === 'PREVENTION_STATUS_CHANGED') {
+      fetchPreventionStatus().then(setPreventionStatus);
+      fetchBlockedIPs().then(setBlockedIPs);
+    } else if (msg.type === 'PCAP_REPLAY_COMPLETED') {
+      loadData();
     }
-  }, []);
+  }, [loadData]);
 
   const { isConnected } = useCyberShieldWebSocket(handleWsMessage);
 
@@ -141,6 +158,24 @@ export const App: React.FC = () => {
     setPreventionStatus(prev);
   };
 
+  const handleStartAttack = async (attackType: string, autoEnforce: boolean) => {
+    const res = await startAttackSimulation({
+      attack_type: attackType,
+      auto_enforce: autoEnforce
+    });
+    setSimStatus(res);
+    if (autoEnforce) {
+      const prev = await fetchPreventionStatus();
+      setPreventionStatus(prev);
+    }
+  };
+
+  const handleStopAttack = async () => {
+    await stopAttackSimulation();
+    const sim = await fetchSimulationStatus();
+    setSimStatus(sim);
+  };
+
   const handleSelectEvent = (event: SecurityEvent) => {
     setSelectedEvent(event);
     setActiveTab('event-detail');
@@ -166,6 +201,8 @@ export const App: React.FC = () => {
           preventionMode={preventionStatus?.mode ?? 'OBSERVE'}
           onToggleMonitoring={handleToggleMonitoring}
           onRefresh={loadData}
+          onOpenGuide={() => setIsGuideOpen(true)}
+          onNavigateTab={setActiveTab}
         />
 
         <main className="content-body">
@@ -180,6 +217,16 @@ export const App: React.FC = () => {
             />
           )}
 
+          {activeTab === 'attack-lab' && (
+            <AttackLabPage
+              simStatus={simStatus}
+              preventionMode={preventionStatus?.mode ?? 'OBSERVE'}
+              onStartAttack={handleStartAttack}
+              onStopAttack={handleStopAttack}
+              onNavigateTab={setActiveTab}
+            />
+          )}
+
           {activeTab === 'live' && (
             <LiveMonitoringPage
               status={monitoringStatus}
@@ -187,6 +234,7 @@ export const App: React.FC = () => {
               onStartCapture={handleStartCapture}
               onStartPcap={handleStartPcap}
               onStopCapture={handleStopCapture}
+              onNavigateTab={setActiveTab}
             />
           )}
 
@@ -223,6 +271,14 @@ export const App: React.FC = () => {
           )}
         </main>
       </div>
+
+      {/* Professor Presentation Walkthrough Modal */}
+      <DemoGuideModal
+        isOpen={isGuideOpen}
+        onClose={() => setIsGuideOpen(false)}
+        onNavigateTab={setActiveTab}
+        onStartAttack={handleStartAttack}
+      />
     </div>
   );
 };

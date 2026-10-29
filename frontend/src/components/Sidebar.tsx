@@ -6,7 +6,8 @@ import {
   Lock,
   Cpu,
   ShieldCheck,
-  Terminal
+  FlaskConical,
+  Zap
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -23,96 +24,83 @@ export const Sidebar: React.FC<SidebarProps> = ({
   blockedCount
 }) => {
   const navItems = [
-    { id: 'overview', label: 'Security Overview', icon: ShieldAlert, badge: threatCount > 0 ? threatCount : null },
-    { id: 'live', label: 'Live Monitoring', icon: Activity, badge: null },
-    { id: 'threats', label: 'Threat Detection', icon: Crosshair, badge: threatCount > 0 ? threatCount : null },
-    { id: 'prevention', label: 'Prevention Center', icon: Lock, badge: blockedCount > 0 ? blockedCount : null },
-    { id: 'ml', label: 'Machine Learning', icon: Cpu, badge: 'RF-1.0' },
+    {
+      group: 'MONITORING',
+      items: [
+        { id: 'overview',   label: 'Overview',          icon: ShieldAlert, badge: threatCount > 0 ? String(threatCount) : null, badgeVariant: 'alert' as const },
+        { id: 'live',       label: 'Live Monitoring',   icon: Activity,    badge: null },
+        { id: 'threats',    label: 'Threat Detection',  icon: Crosshair,   badge: threatCount > 0 ? String(threatCount) : null, badgeVariant: 'alert' as const },
+      ]
+    },
+    {
+      group: 'DEFENSE',
+      items: [
+        { id: 'prevention', label: 'Prevention Center', icon: Lock,    badge: blockedCount > 0 ? String(blockedCount) : null, badgeVariant: 'default' as const },
+        { id: 'ml',         label: 'ML Classifier',     icon: Cpu,     badge: 'RF', badgeVariant: 'default' as const },
+      ]
+    },
+    {
+      group: 'LAB',
+      items: [
+        { id: 'attack-lab', label: 'Attack Lab',        icon: FlaskConical, badge: 'DEMO', badgeVariant: 'default' as const },
+      ]
+    }
   ];
 
   return (
     <aside className="sidebar">
-      <div style={{ padding: '24px 20px', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <div style={{
-          width: '38px',
-          height: '38px',
-          borderRadius: '8px',
-          background: 'linear-gradient(135deg, #0284c7, #0369a1)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: '0 0 16px rgba(2, 132, 199, 0.4)'
-        }}>
-          <ShieldCheck size={22} color="#ffffff" />
+      {/* Logo */}
+      <div className="sidebar-logo">
+        <div className="sidebar-logo-icon">
+          <ShieldCheck size={20} color="#fff" />
         </div>
         <div>
-          <div style={{ fontWeight: '700', fontSize: '1.05rem', letterSpacing: '0.02em', color: '#f8fafc' }}>
-            CYBERSHIELD
-          </div>
-          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', letterSpacing: '0.06em' }}>
-            NIDPS PLATFORM
-          </div>
+          <div className="sidebar-logo-name">CYBERSHIELD</div>
+          <div className="sidebar-logo-sub">NIDPS Platform</div>
         </div>
       </div>
 
-      <nav style={{ padding: '16px 12px', flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = activeTab === item.id;
-          return (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '10px 14px',
-                borderRadius: '6px',
-                border: 'none',
-                background: isActive ? 'rgba(56, 189, 248, 0.12)' : 'transparent',
-                color: isActive ? 'var(--accent-cyan)' : 'var(--text-secondary)',
-                fontSize: '0.875rem',
-                fontWeight: isActive ? 600 : 500,
-                cursor: 'pointer',
-                textAlign: 'left',
-                transition: 'all 0.15s ease'
-              }}
-              onMouseEnter={(e) => {
-                if (!isActive) e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
-              }}
-              onMouseLeave={(e) => {
-                if (!isActive) e.currentTarget.style.backgroundColor = 'transparent';
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <Icon size={18} />
-                <span>{item.label}</span>
-              </div>
-              {item.badge !== null && (
-                <span style={{
-                  padding: '2px 7px',
-                  borderRadius: '10px',
-                  fontSize: '0.7rem',
-                  fontWeight: 700,
-                  background: isActive ? 'var(--accent-cyan)' : 'var(--bg-tertiary)',
-                  color: isActive ? '#090d16' : 'var(--text-secondary)'
-                }}>
-                  {item.badge}
-                </span>
-              )}
-            </button>
-          );
-        })}
+      {/* Navigation */}
+      <nav className="sidebar-nav">
+        {navItems.map((group) => (
+          <div key={group.group}>
+            <div className="sidebar-label">{group.group}</div>
+            {group.items.map((item) => {
+              const Icon = item.icon;
+              const isActive = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  id={`nav-${item.id}`}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`nav-item${isActive ? ' active' : ''}`}
+                >
+                  <span className="nav-item-left">
+                    <Icon size={16} />
+                    <span>{item.label}</span>
+                  </span>
+                  {item.badge && (
+                    <span className={`nav-badge${item.badgeVariant === 'alert' && !isActive ? ' nav-badge-alert' : ''}`}>
+                      {item.badge}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        ))}
       </nav>
 
-      <div style={{ padding: '16px', borderTop: '1px solid var(--border-color)', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-          <div className="pulse-dot" />
-          <span style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>Active Engine</span>
+      {/* Footer */}
+      <div className="sidebar-footer">
+        <div className="sidebar-status">
+          <span className="dot dot-green" />
+          <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>Engine Active</span>
         </div>
-        <div>FastAPI + Scapy + Random Forest</div>
-        <div style={{ marginTop: '4px', fontSize: '0.7rem' }}>CyberShield v1.0.0</div>
+        <div className="sidebar-version" style={{ marginTop: 6 }}>
+          <div style={{ color: 'var(--text-muted)', fontSize: 10 }}>FastAPI · Scapy · Random Forest</div>
+          <div style={{ color: 'var(--text-muted)', fontSize: 10, marginTop: 2 }}>CyberShield v1.0.0</div>
+        </div>
       </div>
     </aside>
   );

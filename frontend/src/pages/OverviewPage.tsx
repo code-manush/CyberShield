@@ -2,12 +2,11 @@ import React from 'react';
 import {
   ShieldAlert,
   Radio,
-  Lock,
-  Layers,
   Flame,
   KeyRound,
-  AlertTriangle,
-  ArrowRight
+  ArrowUpRight,
+  TrendingUp,
+  Activity
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -33,15 +32,26 @@ interface OverviewPageProps {
   onNavigateTab: (tab: string) => void;
 }
 
-const SEVERITY_COLORS: Record<string, string> = {
-  CRITICAL: '#ef4444',
-  HIGH: '#f97316',
-  MEDIUM: '#eab308',
-  LOW: '#3b82f6',
-  INFO: '#10b981'
+const SEV_COLORS: Record<string, string> = {
+  CRITICAL: '#f43f5e',
+  HIGH:     '#fb923c',
+  MEDIUM:   '#fbbf24',
+  LOW:      '#60a5fa',
+  INFO:     '#34d399'
 };
 
-const PIE_COLORS = ['#38bdf8', '#f97316', '#a855f7', '#ec4899', '#10b981'];
+const PIE_COLORS = ['#6366f1', '#22d3ee', '#a78bfa', '#fb923c', '#34d399'];
+
+const TOOLTIP_STYLE = {
+  contentStyle: {
+    background: '#1e2330',
+    border: '1px solid rgba(255,255,255,0.1)',
+    borderRadius: 10,
+    fontSize: 12,
+    boxShadow: '0 8px 24px rgba(0,0,0,0.5)'
+  },
+  labelStyle: { color: '#8b95a6' }
+};
 
 export const OverviewPage: React.FC<OverviewPageProps> = ({
   stats,
@@ -51,121 +61,144 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({
   onSelectEvent,
   onNavigateTab
 }) => {
-  const severityData = stats ? Object.entries(stats.severity_distribution).map(([sev, count]) => ({
-    severity: sev,
-    count,
-    color: SEVERITY_COLORS[sev] || '#64748b'
-  })) : [];
-
-  const attackData = stats ? Object.entries(stats.attack_distribution).map(([name, value]) => ({
-    name: name.replace('_SUSPECTED', '').replace('_', ' '),
-    value
-  })) : [];
-
-  const trafficHistory = netStats?.history && netStats.history.length > 0 
-    ? netStats.history.map((h, i) => ({
-        time: `${i}s`,
-        pps: h.pps,
-        bps: Math.round(h.bps / 1024) // KB/s
+  const severityData = stats
+    ? Object.entries(stats.severity_distribution).map(([sev, count]) => ({
+        severity: sev,
+        count,
+        color: SEV_COLORS[sev] || '#545d6d'
       }))
+    : [];
+
+  const attackData = stats
+    ? Object.entries(stats.attack_distribution).map(([name, value]) => ({
+        name: name.replace('_SUSPECTED', '').replace(/_/g, ' '),
+        value
+      }))
+    : [];
+
+  const trafficHistory = netStats?.history && netStats.history.length > 0
+    ? netStats.history.map((h, i) => ({ time: `${i}s`, pps: h.pps, bps: Math.round(h.bps / 1024) }))
     : [{ time: '0s', pps: 0, bps: 0 }];
 
+  const metricCards = [
+    {
+      label: 'Total Threats',
+      value: stats?.total_events ?? 0,
+      sub: 'Security detections',
+      icon: ShieldAlert,
+      color: '#6366f1',
+      bg: 'rgba(99,102,241,0.12)'
+    },
+    {
+      label: 'Port Scans',
+      value: stats?.port_scan_count ?? 0,
+      sub: 'TCP sweep events',
+      icon: Radio,
+      color: '#22d3ee',
+      bg: 'rgba(34,211,238,0.12)'
+    },
+    {
+      label: 'SYN Floods',
+      value: stats?.syn_flood_count ?? 0,
+      sub: 'High-rate SYN bursts',
+      icon: Flame,
+      color: '#fb923c',
+      bg: 'rgba(251,146,60,0.12)'
+    },
+    {
+      label: 'Brute Force',
+      value: stats?.brute_force_count ?? 0,
+      sub: 'Credential attacks',
+      icon: KeyRound,
+      color: '#a78bfa',
+      bg: 'rgba(167,139,250,0.12)'
+    }
+  ];
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      {/* Top Metric Cards */}
-      <div className="grid-4">
-        <div className="card">
-          <div className="card-title">
-            <ShieldAlert size={16} color="var(--accent-cyan)" />
-            <span>Total Threats</span>
-          </div>
-          <div style={{ fontSize: '2rem', fontWeight: 700, color: '#f8fafc' }}>
-            {stats?.total_events ?? 0}
-          </div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-            Cumulative security detections
-          </div>
+    <div className="stack fade-in">
+      {/* Page header */}
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">Security Overview</h1>
+          <p className="page-desc">Real-time threat summary across all detection engines</p>
         </div>
-
-        <div className="card">
-          <div className="card-title">
-            <Radio size={16} color="#38bdf8" />
-            <span>Port Scans</span>
-          </div>
-          <div style={{ fontSize: '2rem', fontWeight: 700, color: '#38bdf8' }}>
-            {stats?.port_scan_count ?? 0}
-          </div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-            TCP horizontal / vertical sweeps
-          </div>
-        </div>
-
-        <div className="card">
-          <div className="card-title">
-            <Flame size={16} color="#f97316" />
-            <span>SYN Floods</span>
-          </div>
-          <div style={{ fontSize: '2rem', fontWeight: 700, color: '#f97316' }}>
-            {stats?.syn_flood_count ?? 0}
-          </div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-            High-rate unacknowledged SYNs
-          </div>
-        </div>
-
-        <div className="card">
-          <div className="card-title">
-            <KeyRound size={16} color="#a855f7" />
-            <span>Brute Force</span>
-          </div>
-          <div style={{ fontSize: '2rem', fontWeight: 700, color: '#a855f7' }}>
-            {stats?.brute_force_count ?? 0}
-          </div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-            Credential spray & brute force bursts
-          </div>
-        </div>
+        <button
+          onClick={() => onNavigateTab('threats')}
+          className="btn btn-secondary btn-sm"
+        >
+          View All Threats
+          <ArrowUpRight size={13} />
+        </button>
       </div>
 
-      {/* Middle Row: Traffic Chart & Attack Distribution */}
-      <div className="grid-2">
-        <div className="card">
-          <div className="card-title" style={{ justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Layers size={16} color="var(--accent-cyan)" />
-              <span>Network Traffic Rate (Live Stream)</span>
+      {/* Metric cards */}
+      <div className="grid-4">
+        {metricCards.map((m) => {
+          const Icon = m.icon;
+          return (
+            <div key={m.label} className="card metric-card">
+              <div className="metric-card-icon" style={{ background: m.bg }}>
+                <Icon size={18} color={m.color} />
+              </div>
+              <div className="metric-card-value" style={{ color: m.color }}>
+                {m.value}
+              </div>
+              <div className="metric-card-label">{m.label}</div>
+              <div className="metric-card-sub">{m.sub}</div>
             </div>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-              Current: {netStats?.current_pps ?? 0} pkts/s ({((netStats?.current_bps ?? 0) / 1024).toFixed(1)} KB/s)
+          );
+        })}
+      </div>
+
+      {/* Charts row */}
+      <div className="grid-2">
+        {/* Traffic chart */}
+        <div className="card">
+          <div className="card-header">
+            <div className="card-title">
+              <Activity size={15} color="var(--indigo-l)" />
+              Network Traffic Rate
+            </div>
+            <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+              {netStats?.current_pps ?? 0} pkts/s &middot; {((netStats?.current_bps ?? 0) / 1024).toFixed(1)} KB/s
             </span>
           </div>
-          <div style={{ height: '230px', marginTop: '12px' }}>
+          <div style={{ height: 200 }}>
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={trafficHistory}>
                 <defs>
                   <linearGradient id="ppsGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#38bdf8" stopOpacity={0.4}/>
-                    <stop offset="95%" stopColor="#38bdf8" stopOpacity={0.0}/>
+                    <stop offset="5%"  stopColor="#6366f1" stopOpacity={0.35} />
+                    <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <XAxis dataKey="time" stroke="#475569" fontSize={11} tickLine={false} />
-                <YAxis stroke="#475569" fontSize={11} tickLine={false} />
-                <Tooltip
-                  contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '6px' }}
-                  labelStyle={{ color: '#94a3b8' }}
+                <XAxis dataKey="time" stroke="#545d6d" fontSize={11} tickLine={false} axisLine={false} />
+                <YAxis stroke="#545d6d" fontSize={11} tickLine={false} axisLine={false} />
+                <Tooltip {...TOOLTIP_STYLE} />
+                <Area
+                  type="monotone"
+                  dataKey="pps"
+                  stroke="#6366f1"
+                  strokeWidth={2}
+                  fillOpacity={1}
+                  fill="url(#ppsGrad)"
+                  name="Packets/sec"
                 />
-                <Area type="monotone" dataKey="pps" stroke="#38bdf8" strokeWidth={2} fillOpacity={1} fill="url(#ppsGrad)" name="Packets/sec" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
 
+        {/* Attack distribution */}
         <div className="card">
-          <div className="card-title">
-            <AlertTriangle size={16} color="#f97316" />
-            <span>Attack Category Breakdown</span>
+          <div className="card-header">
+            <div className="card-title">
+              <TrendingUp size={15} color="var(--sev-high)" />
+              Attack Distribution
+            </div>
           </div>
-          <div style={{ height: '230px', marginTop: '12px', display: 'flex', alignItems: 'center' }}>
+          <div style={{ height: 200, display: 'flex', alignItems: 'center' }}>
             {attackData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -175,45 +208,43 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({
                     nameKey="name"
                     cx="50%"
                     cy="50%"
-                    outerRadius={80}
-                    innerRadius={50}
-                    label={(entry) => `${entry.name} (${entry.value})`}
+                    outerRadius={75}
+                    innerRadius={45}
+                    paddingAngle={3}
                   >
-                    {attackData.map((_, index) => (
-                      <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                    {attackData.map((_, i) => (
+                      <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip
-                    contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '6px' }}
-                  />
+                  <Tooltip {...TOOLTIP_STYLE} />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <div style={{ textAlign: 'center', width: '100%', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-                No attacks detected yet. Run a test simulation or replay a capture to observe distribution.
+              <div style={{ textAlign: 'center', width: '100%', color: 'var(--text-muted)', fontSize: 13, lineHeight: 1.6 }}>
+                No attacks detected yet.<br />
+                <span style={{ fontSize: 12 }}>Run a simulation or replay a capture to see data.</span>
               </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* Severity Distribution & Recent Alerts */}
+      {/* Severity + Defense status */}
       <div className="grid-2">
+        {/* Severity chart */}
         <div className="card">
-          <div className="card-title">
-            <span>Threat Severity Distribution</span>
+          <div className="card-header">
+            <div className="card-title">Severity Breakdown</div>
           </div>
-          <div style={{ height: '220px', marginTop: '12px' }}>
+          <div style={{ height: 200 }}>
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={severityData}>
-                <XAxis dataKey="severity" stroke="#475569" fontSize={11} tickLine={false} />
-                <YAxis stroke="#475569" fontSize={11} tickLine={false} />
-                <Tooltip
-                  contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '6px' }}
-                />
+              <BarChart data={severityData} barCategoryGap="35%">
+                <XAxis dataKey="severity" stroke="#545d6d" fontSize={11} tickLine={false} axisLine={false} />
+                <YAxis stroke="#545d6d" fontSize={11} tickLine={false} axisLine={false} />
+                <Tooltip {...TOOLTIP_STYLE} />
                 <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                  {severityData.map((entry, index) => (
-                    <Cell key={`sev-cell-${index}`} fill={entry.color} />
+                  {severityData.map((entry, i) => (
+                    <Cell key={i} fill={entry.color} />
                   ))}
                 </Bar>
               </BarChart>
@@ -221,85 +252,98 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({
           </div>
         </div>
 
+        {/* Defense status */}
         <div className="card">
-          <div className="card-title" style={{ justifyContent: 'space-between' }}>
-            <span>Active Defensive Status</span>
-            <span style={{ fontSize: '0.75rem', color: 'var(--accent-cyan)' }}>
-              Mode: {prevStatus?.mode ?? 'OBSERVE'}
+          <div className="card-header">
+            <div className="card-title">Active Defense</div>
+            <span style={{
+              padding: '3px 10px',
+              borderRadius: 99,
+              fontSize: 11,
+              fontWeight: 700,
+              background: prevStatus?.mode === 'ENFORCE' ? 'rgba(244,63,94,0.15)' : 'rgba(99,102,241,0.15)',
+              color: prevStatus?.mode === 'ENFORCE' ? '#fb7185' : 'var(--indigo-l)',
+              border: `1px solid ${prevStatus?.mode === 'ENFORCE' ? 'rgba(244,63,94,0.3)' : 'rgba(99,102,241,0.3)'}`
+            }}>
+              {prevStatus?.mode ?? 'OBSERVE'}
             </span>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px', background: 'var(--bg-tertiary)', borderRadius: '6px' }}>
-              <div>
-                <div style={{ fontWeight: 600 }}>Active Blocked Addresses</div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Lease-controlled source IPs</div>
-              </div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#f87171' }}>
-                {prevStatus?.active_blocks_count ?? 0}
-              </div>
-            </div>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px', background: 'var(--bg-tertiary)', borderRadius: '6px' }}>
-              <div>
-                <div style={{ fontWeight: 600 }}>Firewall Adapter Engine</div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Defensive execution layer</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {[
+              { label: 'Blocked Addresses', sub: 'Lease-controlled IPs', value: prevStatus?.active_blocks_count ?? 0, color: '#f43f5e' },
+              { label: 'Firewall Adapter', sub: 'Execution layer', value: prevStatus?.adapter ?? 'Simulation', color: 'var(--cyan)' },
+              { label: 'Trusted Allowlist', sub: 'Always exempt', value: `${prevStatus?.trusted_ips?.length ?? 0} IPs`, color: 'var(--emerald)' }
+            ].map((row) => (
+              <div
+                key={row.label}
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  padding: '10px 14px',
+                  background: 'var(--bg-elevated)',
+                  borderRadius: 8,
+                  border: '1px solid var(--border-subtle)'
+                }}
+              >
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 600 }}>{row.label}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>{row.sub}</div>
+                </div>
+                <div style={{ fontWeight: 700, color: row.color, fontSize: 15 }}>{row.value}</div>
               </div>
-              <div style={{ fontWeight: 600, color: '#38bdf8' }}>
-                {prevStatus?.adapter ?? 'Simulation'}
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px', background: 'var(--bg-tertiary)', borderRadius: '6px' }}>
-              <div>
-                <div style={{ fontWeight: 600 }}>Trusted Allowlist Count</div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Exempt from blocking</div>
-              </div>
-              <div style={{ fontWeight: 600, color: '#34d399' }}>
-                {prevStatus?.trusted_ips?.length ?? 0} IPs
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Recent Detections Table */}
+      {/* Recent detections */}
       <div className="card">
-        <div className="card-title" style={{ justifyContent: 'space-between' }}>
-          <span>Recent Security Detections</span>
-          <button onClick={() => onNavigateTab('threats')} className="btn btn-secondary btn-sm">
-            <span>View All Threat Records</span>
-            <ArrowRight size={14} />
+        <div className="card-header">
+          <div className="card-title">
+            <ShieldAlert size={15} color="var(--indigo-l)" />
+            Recent Detections
+          </div>
+          <button onClick={() => onNavigateTab('threats')} className="btn btn-ghost btn-sm">
+            View all <ArrowUpRight size={12} />
           </button>
         </div>
 
-        <div className="table-container" style={{ marginTop: '14px' }}>
+        <div className="table-container">
           <table className="soc-table">
             <thead>
               <tr>
-                <th>Timestamp</th>
-                <th>Attack Category</th>
+                <th>Time</th>
+                <th>Attack Type</th>
                 <th>Source IP</th>
                 <th>Target</th>
-                <th>Risk Score</th>
+                <th>Risk</th>
                 <th>Severity</th>
-                <th>Action Taken</th>
-                <th>Details</th>
+                <th>Action</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
-              {events.slice(0, 7).map((ev) => (
+              {events.slice(0, 8).map((ev) => (
                 <tr key={ev.id}>
-                  <td className="mono" style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                  <td className="mono" style={{ fontSize: 11, color: 'var(--text-muted)' }}>
                     {new Date(ev.timestamp).toLocaleTimeString()}
                   </td>
-                  <td style={{ fontWeight: 600 }}>{ev.attack_type}</td>
-                  <td className="mono" style={{ color: 'var(--accent-cyan)' }}>{ev.source_ip}</td>
-                  <td className="mono" style={{ color: 'var(--text-secondary)' }}>
-                    {ev.destination_ip ? `${ev.destination_ip}${ev.destination_port ? `:${ev.destination_port}` : ''}` : '-'}
+                  <td style={{ fontWeight: 600, fontSize: 12 }}>{ev.attack_type.replace(/_/g, ' ')}</td>
+                  <td className="mono" style={{ color: 'var(--cyan)', fontSize: 12 }}>{ev.source_ip}</td>
+                  <td className="mono" style={{ color: 'var(--text-secondary)', fontSize: 11 }}>
+                    {ev.destination_ip
+                      ? `${ev.destination_ip}${ev.destination_port ? `:${ev.destination_port}` : ''}`
+                      : '—'}
                   </td>
                   <td>
-                    <span style={{ fontWeight: 700, color: ev.risk_score >= 70 ? '#f87171' : '#fde047' }}>
-                      {ev.risk_score.toFixed(1)}
+                    <span style={{
+                      fontWeight: 700,
+                      fontSize: 13,
+                      color: ev.risk_score >= 70 ? 'var(--sev-critical)' : ev.risk_score >= 40 ? 'var(--sev-medium)' : 'var(--sev-info)'
+                    }}>
+                      {ev.risk_score.toFixed(0)}
                     </span>
                   </td>
                   <td>
@@ -307,13 +351,11 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({
                       {ev.severity}
                     </span>
                   </td>
-                  <td>
-                    <span style={{ fontSize: '0.75rem', fontWeight: 600, color: ev.action_taken.includes('BLOCK') ? '#f87171' : 'var(--text-secondary)' }}>
-                      {ev.action_taken}
-                    </span>
+                  <td style={{ fontSize: 11, color: ev.action_taken.includes('BLOCK') ? '#fb7185' : 'var(--text-muted)', fontWeight: 600 }}>
+                    {ev.action_taken}
                   </td>
                   <td>
-                    <button onClick={() => onSelectEvent(ev)} className="btn btn-secondary btn-sm">
+                    <button onClick={() => onSelectEvent(ev)} className="btn btn-ghost btn-xs">
                       Inspect
                     </button>
                   </td>
@@ -322,7 +364,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({
               {events.length === 0 && (
                 <tr>
                   <td colSpan={8} style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
-                    No security events recorded. The system is operating normally.
+                    No events recorded. The system is operating normally.
                   </td>
                 </tr>
               )}

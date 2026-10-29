@@ -147,3 +147,18 @@ export interface SystemStatus {
     model_type: string;
   };
 }
+
+export interface AttackSimulationStatus {
+  is_attacking: boolean;
+  attack_type?: string | null;
+  source_ip?: string | null;
+  target_ip?: string | null;
+  target_port?: number | null;
+  packets_sent: number;
+  total_packets: number;
+  progress_percent: number;
+  current_step: string;
+  started_at?: string | null;
+  last_threat_flagged?: any;
+  logs: string[];
+}

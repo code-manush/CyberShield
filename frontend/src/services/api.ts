@@ -133,3 +133,33 @@ export async function simulateAuthAttempt(username: string, password: string): P
   });
   return res.json();
 }
+
+export async function fetchSimulationStatus(): Promise<any> {
+  const res = await fetch(`${API_BASE}/simulation/status`);
+  return res.json();
+}
+
+export async function startAttackSimulation(params: {
+  attack_type: string;
+  source_ip?: string;
+  target_ip?: string;
+  target_port?: number;
+  intensity?: string;
+  auto_enforce?: boolean;
+}): Promise<any> {
+  const res = await fetch(`${API_BASE}/simulation/start`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params)
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.detail || 'Failed to start attack simulation');
+  }
+  return res.json();
+}
+
+export async function stopAttackSimulation(): Promise<any> {
+  const res = await fetch(`${API_BASE}/simulation/stop`, { method: 'POST' });
+  return res.json();
+}

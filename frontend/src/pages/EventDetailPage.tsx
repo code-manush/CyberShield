@@ -35,47 +35,47 @@ export const EventDetailPage: React.FC<EventDetailPageProps> = ({ event, onBack 
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+    <div className="stack fade-in">
       {/* Top Navigation */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <button onClick={onBack} className="btn btn-secondary btn-sm" style={{ gap: '6px' }}>
+        <button onClick={onBack} className="btn btn-secondary btn-sm" style={{ gap: 6 }}>
           <ArrowLeft size={14} />
-          <span>Back to Threat Records</span>
+          <span>Back to Threats</span>
         </button>
-        <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
           Event ID: <span className="mono" style={{ color: 'var(--text-secondary)' }}>{event.id}</span>
         </div>
       </div>
 
       {/* Main Event Header Card */}
       <div className="card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-              <span className={`badge badge-${event.severity.toLowerCase()}`} style={{ fontSize: '0.85rem' }}>
-                {event.severity}
-              </span>
-              <h2 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#f8fafc' }}>
-                {event.attack_type}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+              <span className={`badge badge-${event.severity.toLowerCase()}`}>{event.severity}</span>
+              <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em' }}>
+                {event.attack_type.replace(/_/g, ' ')}
               </h2>
             </div>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-              Detection Method: <strong>{event.detection_method}</strong> | Recorded: <strong>{new Date(event.timestamp).toLocaleString()}</strong>
+            <p style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+              Detection: <strong>{event.detection_method}</strong> &middot; Recorded: <strong>{new Date(event.timestamp).toLocaleString()}</strong>
             </p>
           </div>
 
           <div style={{
-            background: 'var(--bg-tertiary)',
-            padding: '12px 24px',
-            borderRadius: '8px',
+            background: 'var(--bg-elevated)',
+            padding: '14px 22px',
+            borderRadius: 12,
             textAlign: 'center',
-            border: '1px solid var(--border-color)'
+            border: '1px solid var(--border-muted)'
           }}>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Risk Score
-            </div>
-            <div className="mono" style={{ fontSize: '2rem', fontWeight: 800, color: event.risk_score >= 70 ? '#f87171' : '#fde047' }}>
-              {event.risk_score.toFixed(1)} <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>/ 100</span>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Risk Score</div>
+            <div className="mono" style={{
+              fontSize: 28,
+              fontWeight: 800,
+              color: event.risk_score >= 70 ? 'var(--sev-critical)' : event.risk_score >= 40 ? 'var(--sev-medium)' : 'var(--sev-info)'
+            }}>
+              {event.risk_score.toFixed(0)} <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>/ 100</span>
             </div>
           </div>
         </div>
@@ -84,73 +84,59 @@ export const EventDetailPage: React.FC<EventDetailPageProps> = ({ event, onBack 
       {/* Addresses & Telemetry Breakdown */}
       <div className="grid-2">
         <div className="card">
-          <div className="card-title">
-            <Server size={16} color="var(--accent-cyan)" />
-            <span>Target & Endpoint Routing</span>
+          <div className="card-header">
+            <div className="card-title">
+              <Server size={15} color="var(--indigo-l)" />
+              Network Routing
+            </div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '12px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--bg-tertiary)', borderRadius: '6px' }}>
-              <span style={{ color: 'var(--text-secondary)' }}>Attacking Source IP:</span>
-              <span className="mono" style={{ fontWeight: 600, color: '#f87171' }}>{event.source_ip}</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--bg-tertiary)', borderRadius: '6px' }}>
-              <span style={{ color: 'var(--text-secondary)' }}>Target Host Address:</span>
-              <span className="mono" style={{ fontWeight: 600, color: 'var(--accent-cyan)' }}>{event.destination_ip || 'Internal / N/A'}</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--bg-tertiary)', borderRadius: '6px' }}>
-              <span style={{ color: 'var(--text-secondary)' }}>Target Destination Port:</span>
-              <span className="mono" style={{ fontWeight: 600 }}>{event.destination_port || 'Multiple / Swept'}</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--bg-tertiary)', borderRadius: '6px' }}>
-              <span style={{ color: 'var(--text-secondary)' }}>Defensive Action Taken:</span>
-              <span style={{ fontWeight: 600, color: event.action_taken.includes('BLOCK') ? '#f87171' : 'var(--text-secondary)' }}>
-                {event.action_taken}
-              </span>
-            </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {[
+              { label: 'Source IP (Attacker)', value: event.source_ip, color: '#fb7185', mono: true },
+              { label: 'Destination IP', value: event.destination_ip || 'Internal / N/A', color: 'var(--cyan)', mono: true },
+              { label: 'Destination Port', value: event.destination_port || 'Multiple / Swept', color: 'var(--text-primary)', mono: true },
+              { label: 'Action Taken', value: event.action_taken, color: event.action_taken.includes('BLOCK') ? '#fb7185' : 'var(--text-secondary)', mono: false },
+            ].map((row) => (
+              <div key={row.label} style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '10px 14px',
+                background: 'var(--bg-elevated)',
+                borderRadius: 8,
+                border: '1px solid var(--border-subtle)'
+              }}>
+                <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{row.label}</span>
+                <span className={row.mono ? 'mono' : ''} style={{ fontWeight: 600, color: row.color, fontSize: 12 }}>{row.value}</span>
+              </div>
+            ))}
           </div>
         </div>
 
         <div className="card">
-          <div className="card-title">
-            <Activity size={16} color="#34d399" />
-            <span>Telemetry Evidence Summary</span>
+          <div className="card-header">
+            <div className="card-title">
+              <Activity size={15} color="var(--emerald)" />
+              Evidence Summary
+            </div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '12px', fontSize: '0.85rem' }}>
-            {evidenceObj.threshold && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: 'var(--bg-tertiary)', borderRadius: '4px' }}>
-                <span style={{ color: 'var(--text-secondary)' }}>Trigger Threshold:</span>
-                <span className="mono">{evidenceObj.threshold}</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 12 }}>
+            {Object.entries(evidenceObj).slice(0, 6).map(([key, val]) => (
+              <div key={key} style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '9px 14px',
+                background: 'var(--bg-elevated)',
+                borderRadius: 8,
+                border: '1px solid var(--border-subtle)'
+              }}>
+                <span style={{ color: 'var(--text-secondary)' }}>{key.replace(/_/g, ' ')}</span>
+                <span className="mono" style={{ fontWeight: 600, color: 'var(--indigo-l)' }}>{String(val)}</span>
               </div>
-            )}
-            {evidenceObj.distinct_ports && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: 'var(--bg-tertiary)', borderRadius: '4px' }}>
-                <span style={{ color: 'var(--text-secondary)' }}>Distinct Ports Probed:</span>
-                <span className="mono">{evidenceObj.distinct_ports}</span>
-              </div>
-            )}
-            {evidenceObj.syn_count && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: 'var(--bg-tertiary)', borderRadius: '4px' }}>
-                <span style={{ color: 'var(--text-secondary)' }}>SYN Packets Observed:</span>
-                <span className="mono">{evidenceObj.syn_count}</span>
-              </div>
-            )}
-            {evidenceObj.failed_attempts && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: 'var(--bg-tertiary)', borderRadius: '4px' }}>
-                <span style={{ color: 'var(--text-secondary)' }}>Failed Auth Attempts:</span>
-                <span className="mono">{evidenceObj.failed_attempts}</span>
-              </div>
-            )}
-            {evidenceObj.span_seconds !== undefined && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: 'var(--bg-tertiary)', borderRadius: '4px' }}>
-                <span style={{ color: 'var(--text-secondary)' }}>Observation Window:</span>
-                <span className="mono">{evidenceObj.span_seconds}s</span>
-              </div>
-            )}
-            {evidenceObj.scan_type && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: 'var(--bg-tertiary)', borderRadius: '4px' }}>
-                <span style={{ color: 'var(--text-secondary)' }}>Scan Pattern Classification:</span>
-                <span style={{ color: 'var(--accent-cyan)', fontWeight: 600 }}>{evidenceObj.scan_type}</span>
-              </div>
+            ))}
+            {Object.keys(evidenceObj).length === 0 && (
+              <p style={{ color: 'var(--text-muted)' }}>No structured evidence available.</p>
             )}
           </div>
         </div>
@@ -158,21 +144,24 @@ export const EventDetailPage: React.FC<EventDetailPageProps> = ({ event, onBack 
 
       {/* Structured Evidence JSON */}
       <div className="card">
-        <div className="card-title">
-          <Code size={16} color="var(--accent-cyan)" />
-          <span>Full Structured Detection Evidence (JSON)</span>
+        <div className="card-header">
+          <div className="card-title">
+            <Code size={15} color="var(--indigo-l)" />
+            Raw Evidence (JSON)
+          </div>
         </div>
         <pre
           className="mono"
           style={{
-            background: '#040812',
-            padding: '16px',
-            borderRadius: '6px',
-            border: '1px solid var(--border-color)',
-            color: '#38bdf8',
-            fontSize: '0.8rem',
+            background: '#06090f',
+            padding: 16,
+            borderRadius: 10,
+            border: '1px solid rgba(34,211,238,0.12)',
+            color: '#7dd3fc',
+            fontSize: 12,
             overflowX: 'auto',
-            maxHeight: '360px'
+            maxHeight: 360,
+            lineHeight: 1.7
           }}
         >
           {JSON.stringify(evidenceObj, null, 2)}
