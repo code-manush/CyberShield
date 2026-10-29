@@ -128,6 +128,33 @@ class NetworkSnifferService:
         logger.info(f"[MONITORING] Started live packet sniffing on interface {self.interface or 'default'}")
         return True
 
+    def ensure_monitoring_active(self) -> None:
+        """Ensures worker and stats threads are active for packet injection."""
+        if not self.is_running:
+            self.reset_state()
+            self.mode = "SIMULATION"
+            self.is_running = True
+            self.start_time = datetime.utcnow()
+            self._stop_event.clear()
+
+            self.worker_thread = threading.Thread(target=self._worker_loop, daemon=True)
+            self.worker_thread.start()
+
+            self.stats_thread = threading.Thread(target=self._stats_aggregator_loop, daemon=True)
+            self.stats_thread.start()
+
+            ws_manager.broadcast_sync("MONITORING_STATUS_CHANGED", self.get_status())
+            logger.info("[MONITORING] Started simulation monitoring engine")
+
+    def inject_packet(self, pkt: Any) -> bool:
+        """Inject a synthetic packet directly into the sniffer worker queue."""
+        self.ensure_monitoring_active()
+        try:
+            self.packet_queue.put(pkt, timeout=0.2)
+            return True
+        except queue.Full:
+            return False
+
     def stop(self) -> None:
         """Gracefully stop packet monitoring."""
         if not self.is_running:
@@ -197,11 +224,17 @@ class NetworkSnifferService:
                 for pkt in reader:
                     if self._stop_event.is_set():
                         break
+                    pkt.time = time.time()
                     try:
                         self.packet_queue.put(pkt, timeout=0.1)
+                        time.sleep(0.008)
                     except queue.Full:
                         pass
             logger.info(f"[MONITORING] Finished reading PCAP file: {pcap_path}")
+            ws_manager.broadcast_sync("PCAP_REPLAY_COMPLETED", {
+                "pcap_path": pcap_path,
+                "total_packets": self.packets_captured
+            })
         except Exception as e:
             self.error_message = f"PCAP reading failed: {str(e)}"
             logger.error(f"[MONITORING] Error in PCAP reader: {e}")
@@ -237,8 +270,8 @@ class NetworkSnifferService:
                 if dst_port and dst_port < 49152:
                     self.dest_ports[f"{dst_port}/{proto.lower()}"] += 1
 
-                # Sliding rate window
-                self.recent_packet_times.append((ts, pkt_len))
+                # Sliding rate window measured at current time for live rate display
+                self.recent_packet_times.append((time.time(), pkt_len))
 
                 # 1. Port scan detector
                 if proto == "TCP" and src_ip and dst_ip and dst_port:

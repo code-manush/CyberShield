@@ -86,3 +86,15 @@ def test_allowlist_blocking_rejected(client):
     })
     assert res.status_code == 400
     assert "allowlist" in res.json()["detail"].lower()
+
+
+def test_simulation_status_and_control(client):
+    res = client.get("/api/simulation/status")
+    assert res.status_code == 200
+    data = res.json()
+    assert "is_attacking" in data
+    assert "current_step" in data
+
+    # Test stopping simulation when idle
+    stop_res = client.post("/api/simulation/stop")
+    assert stop_res.status_code == 200

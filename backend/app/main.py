@@ -16,6 +16,7 @@ from app.api.events import router as events_router
 from app.api.prevention import router as prevention_router
 from app.api.ml import router as ml_router
 from app.api.auth import router as auth_router
+from app.api.simulation import router as simulation_router
 
 setup_logging()
 
@@ -60,6 +61,7 @@ app.include_router(events_router)
 app.include_router(prevention_router)
 app.include_router(ml_router)
 app.include_router(auth_router)
+app.include_router(simulation_router)
 
 
 # WebSocket endpoint
