@@ -1,10 +1,10 @@
 {
   "is_trained": true,
   "model_type": "RandomForestClassifier",
-  "model_version": "1.0.0",
-  "dataset_source": "CIC-IDS Standardized Network Flow Telemetry",
-  "training_set_size": 4800,
-  "test_set_size": 1200,
+  "model_version": "2.0.0",
+  "dataset_source": "CIC-IDS2017 (HuggingFace mirror: c01dsnap/CIC-IDS2017)",
+  "training_set_size": 107068,
+  "test_set_size": 26767,
   "features": [
     "flow_duration",
     "total_fwd_packets",
@@ -22,71 +22,94 @@
   ],
   "classes": [
     "BENIGN",
-    "PORT_SCAN",
-    "SYN_FLOOD"
+    "BRUTE_FORCE",
+    "DOS_DDOS",
+    "PORT_SCAN"
   ],
-  "accuracy": 1.0,
-  "precision": 1.0,
-  "recall": 1.0,
-  "f1_score": 1.0,
-  "false_positive_rate": 0.0,
+  "accuracy": 0.9981,
+  "precision": 0.9981,
+  "recall": 0.9981,
+  "f1_score": 0.9981,
+  "false_positive_rate": 0.0007,
   "confusion_matrix": [
     [
-      600,
+      7973,
+      2,
+      24,
+      1
+    ],
+    [
+      2,
+      2765,
       0,
       0
     ],
     [
+      19,
       0,
-      300,
+      7981,
       0
     ],
     [
+      1,
       0,
-      0,
-      300
+      2,
+      7997
     ]
+  ],
+  "confusion_matrix_labels": [
+    "BENIGN",
+    "BRUTE_FORCE",
+    "DOS_DDOS",
+    "PORT_SCAN"
   ],
   "per_class_metrics": {
     "BENIGN": {
-      "precision": 1.0,
-      "recall": 1.0,
-      "f1_score": 1.0,
-      "support": 600.0
+      "precision": 0.9972,
+      "recall": 0.9966,
+      "f1_score": 0.9969,
+      "support": 8000.0
+    },
+    "BRUTE_FORCE": {
+      "precision": 0.9993,
+      "recall": 0.9993,
+      "f1_score": 0.9993,
+      "support": 2767.0
+    },
+    "DOS_DDOS": {
+      "precision": 0.9968,
+      "recall": 0.9976,
+      "f1_score": 0.9972,
+      "support": 8000.0
     },
     "PORT_SCAN": {
-      "precision": 1.0,
-      "recall": 1.0,
-      "f1_score": 1.0,
-      "support": 300.0
-    },
-    "SYN_FLOOD": {
-      "precision": 1.0,
-      "recall": 1.0,
-      "f1_score": 1.0,
-      "support": 300.0
+      "precision": 0.9999,
+      "recall": 0.9996,
+      "f1_score": 0.9997,
+      "support": 8000.0
     }
   },
   "baseline_comparison": {
-    "baseline_type": "Deterministic Rule Heuristic",
+    "baseline_type": "Previous synthetic-data RandomForest v1.0.0",
     "baseline_accuracy": 1.0,
     "baseline_f1_score": 1.0,
-    "ml_f1_improvement": 0.0
+    "ml_f1_improvement": -0.0019,
+    "note": "Previous 1.0 accuracy was on synthetic data \u2014 unrealistic. Real-world scores are now shown."
   },
   "feature_importances": {
-    "total_bwd_bytes": 0.1423,
-    "total_bwd_packets": 0.1184,
-    "ack_ratio": 0.1183,
-    "syn_flag_count": 0.1109,
-    "total_fwd_bytes": 0.0957,
-    "total_fwd_packets": 0.0886,
-    "syn_ratio": 0.0877,
-    "ack_flag_count": 0.0821,
-    "destination_port": 0.0682,
-    "flow_duration": 0.0451,
-    "flow_bytes_per_sec": 0.0193,
-    "is_well_known_port": 0.0134,
-    "flow_packets_per_sec": 0.01
+    "destination_port": 0.2648,
+    "total_bwd_bytes": 0.1235,
+    "total_fwd_packets": 0.1063,
+    "total_fwd_bytes": 0.0943,
+    "flow_bytes_per_sec": 0.0758,
+    "total_bwd_packets": 0.071,
+    "is_well_known_port": 0.0639,
+    "ack_ratio": 0.0513,
+    "flow_packets_per_sec": 0.0506,
+    "flow_duration": 0.0461,
+    "ack_flag_count": 0.0311,
+    "syn_ratio": 0.0126,
+    "syn_flag_count": 0.0085
   },
-  "trained_at": "2026-10-12T12:24:14.604801"
+  "trained_at": "2026-10-29T20:04:42.505040"
 }

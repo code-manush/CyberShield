@@ -147,6 +147,22 @@ class ThreatScoringEngine:
         }
         return final_score, severity, evidence
 
+    # Base risk scores per attack class (floor when model confidence = 100%)
+    _CLASS_BASE_SCORES: Dict[str, float] = {
+        "BENIGN":      0.0,
+        "PORT_SCAN":  50.0,
+        "SYN_FLOOD":  60.0,
+        "DOS_DDOS":   65.0,
+        "BRUTE_FORCE": 55.0,
+    }
+    _CLASS_RANGE: Dict[str, float] = {
+        "BENIGN":      15.0,
+        "PORT_SCAN":   40.0,
+        "SYN_FLOOD":   35.0,
+        "DOS_DDOS":    35.0,
+        "BRUTE_FORCE": 40.0,
+    }
+
     @staticmethod
     def calculate_ml_anomaly_score(
         predicted_class: str,
@@ -154,20 +170,26 @@ class ThreatScoringEngine:
         flow_features: Dict[str, Any]
     ) -> Tuple[float, str, Dict[str, Any]]:
         """Calculate threat score from ML classification output.
-        
-        Calibrates model probability into risk scale (0-100).
+
+        Each attack class has a calibrated base score and range so that
+        high-confidence BENIGN flows score near 0 and high-confidence
+        attack flows score within their severity tier.
         """
+        base  = ThreatScoringEngine._CLASS_BASE_SCORES.get(predicted_class, 50.0)
+        rng   = ThreatScoringEngine._CLASS_RANGE.get(predicted_class, 40.0)
+
         if predicted_class == "BENIGN":
-            final_score = round(probability * 15.0, 1)
+            final_score = round(probability * rng, 1)
             severity = "INFO"
         else:
-            final_score = round(50.0 + (probability * 45.0), 1)
+            final_score = round(base + probability * rng, 1)
+            final_score = min(100.0, final_score)
             severity = ThreatScoringEngine.score_to_severity(final_score)
 
         evidence = {
             "predicted_class": predicted_class,
             "model_confidence": round(probability, 4),
-            "flow_features": flow_features
+            "flow_features": flow_features,
         }
         return final_score, severity, evidence
 

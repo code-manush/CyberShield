@@ -21,7 +21,10 @@ FEATURE_COLUMNS = [
 ]
 
 TARGET_COLUMN = "label"
-CLASSES = ["BENIGN", "PORT_SCAN", "SYN_FLOOD"]
+# Classes supported by the trained model.
+# v1: synthetic data — BENIGN, PORT_SCAN, SYN_FLOOD
+# v2: CIC-IDS2017 real data — adds DOS_DDOS, BRUTE_FORCE
+CLASSES = ["BENIGN", "BRUTE_FORCE", "DOS_DDOS", "PORT_SCAN"]
 
 
 def generate_synthetic_flow_dataset(
