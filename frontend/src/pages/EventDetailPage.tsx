@@ -6,9 +6,11 @@ import {
   Activity,
   Code,
   CheckCircle,
-  AlertTriangle
+  AlertTriangle,
+  FileText
 } from 'lucide-react';
 import { SecurityEvent } from '../types';
+import { getEventDossierPdfUrl, triggerDownload } from '../services/api';
 
 interface EventDetailPageProps {
   event: SecurityEvent | null;
@@ -37,13 +39,23 @@ export const EventDetailPage: React.FC<EventDetailPageProps> = ({ event, onBack 
   return (
     <div className="stack fade-in">
       {/* Top Navigation */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
         <button onClick={onBack} className="btn btn-secondary btn-sm" style={{ gap: 6 }}>
           <ArrowLeft size={14} />
           <span>Back to Threats</span>
         </button>
-        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-          Event ID: <span className="mono" style={{ color: 'var(--text-secondary)' }}>{event.id}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button
+            onClick={() => triggerDownload(getEventDossierPdfUrl(event.id))}
+            className="btn btn-secondary btn-sm"
+            title="Download Forensic Dossier PDF for this Incident"
+          >
+            <FileText size={13} color="var(--accent-red)" />
+            <span>Forensic Dossier (PDF)</span>
+          </button>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+            Event ID: <span className="mono" style={{ color: 'var(--text-secondary)' }}>{event.id}</span>
+          </div>
         </div>
       </div>
 

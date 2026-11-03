@@ -37,3 +37,4 @@ This will:
 | Classes | BENIGN, PORT_SCAN, DOS_DDOS, BRUTE_FORCE |
 | Training samples | 107,068 (after SMOTE) |
 | Dataset | CIC-IDS2017 — Canadian Institute for Cybersecurity |
+

@@ -163,3 +163,37 @@ export async function stopAttackSimulation(): Promise<any> {
   const res = await fetch(`${API_BASE}/simulation/stop`, { method: 'POST' });
   return res.json();
 }
+
+// --- SOC Incident Reports ---
+
+export function getIncidentsCsvUrl(params?: { attack_type?: string; severity?: string; source_ip?: string; limit?: number }): string {
+  const query = new URLSearchParams();
+  if (params?.attack_type && params.attack_type !== 'ALL') query.append('attack_type', params.attack_type);
+  if (params?.severity && params.severity !== 'ALL') query.append('severity', params.severity);
+  if (params?.source_ip) query.append('source_ip', params.source_ip);
+  if (params?.limit) query.append('limit', params.limit.toString());
+  return `${API_BASE}/reports/incidents.csv?${query.toString()}`;
+}
+
+export function getIncidentsPdfUrl(params?: { attack_type?: string; severity?: string; source_ip?: string; limit?: number }): string {
+  const query = new URLSearchParams();
+  if (params?.attack_type && params.attack_type !== 'ALL') query.append('attack_type', params.attack_type);
+  if (params?.severity && params.severity !== 'ALL') query.append('severity', params.severity);
+  if (params?.source_ip) query.append('source_ip', params.source_ip);
+  if (params?.limit) query.append('limit', params.limit.toString());
+  return `${API_BASE}/reports/incidents.pdf?${query.toString()}`;
+}
+
+export function getEventDossierPdfUrl(eventId: string): string {
+  return `${API_BASE}/reports/events/${eventId}.pdf`;
+}
+
+export function triggerDownload(url: string) {
+  const a = document.createElement('a');
+  a.href = url;
+  a.target = '_blank';
+  a.rel = 'noopener noreferrer';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}

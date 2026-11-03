@@ -4,9 +4,12 @@ import {
   SlidersHorizontal,
   Eye,
   RefreshCw,
-  ShieldAlert
+  ShieldAlert,
+  FileText,
+  FileSpreadsheet
 } from 'lucide-react';
 import { SecurityEvent } from '../types';
+import { getIncidentsCsvUrl, getIncidentsPdfUrl, triggerDownload } from '../services/api';
 
 interface ThreatDetectionPageProps {
   events: SecurityEvent[];
@@ -53,10 +56,34 @@ export const ThreatDetectionPage: React.FC<ThreatDetectionPageProps> = ({
           <h1 className="page-title">Threat Detection</h1>
           <p className="page-desc">{filteredEvents.length} matching security events</p>
         </div>
-        <button onClick={onRefresh} className="btn btn-secondary btn-sm" title="Refresh">
-          <RefreshCw size={13} />
-          Refresh
-        </button>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <button
+            onClick={() => triggerDownload(getIncidentsCsvUrl({
+              attack_type: selectedType,
+              severity: selectedSeverity
+            }))}
+            className="btn btn-secondary btn-sm"
+            title="Download CSV Incident Ledger"
+          >
+            <FileSpreadsheet size={13} color="var(--indigo-l)" />
+            Export CSV
+          </button>
+          <button
+            onClick={() => triggerDownload(getIncidentsPdfUrl({
+              attack_type: selectedType,
+              severity: selectedSeverity
+            }))}
+            className="btn btn-secondary btn-sm"
+            title="Download Executive PDF Incident Report"
+          >
+            <FileText size={13} color="var(--accent-red)" />
+            Executive PDF
+          </button>
+          <button onClick={onRefresh} className="btn btn-secondary btn-sm" title="Refresh">
+            <RefreshCw size={13} />
+            Refresh
+          </button>
+        </div>
       </div>
 
       {/* Filter bar */}
